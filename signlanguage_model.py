@@ -38,39 +38,61 @@ def pca_init(X, N):
 	return pca
 
 
-#X_train, X_val, y_train, y_val = train_test_split(X_reduced, y, test_size=0.3, random_state=11)
-
-def train_model(X, K):
+def train_model(X,y, K):
 	clf = KNeighborsClassifier(n_neighbors=K)
 	scores = cross_val_score(clf, X, y, cv=10)
-	print("Model accuracy:", sum(scores)/10)
+	mean_score = sum(scores)/10
+	print("Model accuracy:", mean_score)
 
 	clf.fit(X, y)
 
-	return clf
+	return clf,mean_score
 
 
-#y_pred = clf.predict(X_val)
-#multi_accuracy = accuracy_score(y_val, y_pred)
+def generate_confusion_matrix(X,y):
+	# we need to split the data in order to get an accurate confusion matrix
+	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=7)
+	clf = train_model(X_train,y_train, 10)[0]
+	y_pred = clf.predict(X_test)
+	print(y_pred[10])
 
-def generate_confusion_matrix(y_true, y_pred):
     # visualize the confusion matrix
-    ax = plt.subplot()
-    c_mat = confusion_matrix(y_true, y_pred)
-    sns.heatmap(c_mat, annot=True, fmt='g', ax=ax)
+	ax = plt.subplot()
+	c_mat = confusion_matrix(y_test, y_pred)
+	sns.heatmap(c_mat, annot=True, fmt='g', ax=ax)
 
-    ax.set_xlabel('Predicted labels', fontsize=15)
-    ax.set_ylabel('True labels', fontsize=15)
-    ax.set_title('Confusion Matrix', fontsize=15)
+	ax.set_xlabel('Predicted labels', fontsize=15)
+	ax.set_ylabel('True labels', fontsize=15)
+	ax.set_title('Confusion Matrix', fontsize=15)
 
-#print(multi_accuracy)
-#generate_confusion_matrix(y_val, y_pred)
-#plt.show()
+	plt.show()
+
+def plot_k_accuracy(X,y):
+	scores = []
+	max_k = 50
+	# train model with different k-values and save the k-fold cross-validation -accuracy scores
+	for k in range(1,max_k):
+		scores.append(train_model(X,y, K=k)[1])
+
+	plt.plot(range(1,max_k),scores, color="r")
+	plt.title("Model accuracy with different K-values")
+	plt.xlabel("K-value")
+	plt.ylabel("Accuracy")
+	plt.xticks(range(1,max_k))	
+	plt.yticks(np.arange( round(min(scores),2), round(max(scores),2), 0.01 ))	# set y-axis ticks to be from the smallest acc to biggest with 0,01 increments
+	plt.grid(True, linestyle="-", linewidth=0.5, color="gray", alpha=0.7)		# Add a customized grid to the background
+
+	plt.show()
+
 
 N = 100
+K = 10
 if __name__ == "__main__":
 	X,y = load_data()
 	pca = pca_init(X, N)
 	X_reduced = pca.transform(X)
 
-	clf = train_model(X_reduced, K=10)
+	clf = train_model(X_reduced,y, K)[0]
+
+	#generate_confusion_matrix(X_reduced,y)
+	#plot_k_accuracy(X_reduced,y)
