@@ -50,14 +50,27 @@ def train_model(X,y, K):
 
 # method for generating and visualisizing the confusion matrix for our model
 def generate_confusion_matrix(X,y):
-	# we need to split the data in order to get an accurate confusion matrix
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=7)
-	clf = train_model(X_train,y_train, 10)[0]
-	y_pred = clf.predict(X_test)
+	y_preds = []
+	y_tests = []
+	for _ in range(10):
+		# we need to split the data in order to get an accurate confusion matrix
+		X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1)
+		clf = train_model(X_train,y_train, 10)[0]
+		y_pred = clf.predict(X_test)
+
+		y_preds.append(y_pred)
+		y_tests.append(y_test)
+
+	y_preds_final = []
+	y_tests_final = []
+	for i in range(len(y_preds)):
+		for j in range(len(y_preds[i])):
+			y_preds_final.append(y_preds[i][j])
+			y_tests_final.append(y_tests[i][j])
 
     # visualize the confusion matrix
 	ax = plt.subplot()
-	c_mat = confusion_matrix(y_test, y_pred)
+	c_mat = confusion_matrix(y_tests_final, y_preds_final)
 	sns.heatmap(c_mat, annot=True, fmt='g', ax=ax)
 
 	ax.set_xlabel('Predicted labels', fontsize=15)
